@@ -1,0 +1,31 @@
+from sklearn.ensemble import RandomForestClassifier
+import pandas as pd
+
+train_data = pd.read_csv("/kaggle/input/titanic/train.csv")
+test_data = pd.read_csv("/kaggle/input/titanic/test.csv")
+
+train_data['Age'] = train_data['Age'].fillna(train_data['Age'].median())
+test_data['Age'] = test_data['Age'].fillna(test_data['Age'].median())
+test_data['Fare'] = test_data['Fare'].fillna(test_data['Fare'].median())
+
+train_data['Sex'] = train_data['Sex'].map({'female': 1, 'male': 0})
+test_data['Sex'] = test_data['Sex'].map({'female': 1, 'male': 0})
+
+features = ['Pclass', 'Sex', 'SibSp', 'Parch', 'Age', 'Fare']
+X = train_data[features]
+y = train_data['Survived']
+
+MyModel = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
+MyModel.fit(X, y)
+
+feature_imp = pd.Series(MyModel.feature_importances_, index=features).sort_values(ascending=False)
+print(feature_imp)
+
+X_test = test_data[features]
+predictions = MyModel.predict(X_test)
+
+output = pd.DataFrame({'PassengerId': test_data.PassengerId, 'Survived': predictions})
+output.to_csv('submission.csv', index=False)
+
+print(output.head(10))
+print("Done")
